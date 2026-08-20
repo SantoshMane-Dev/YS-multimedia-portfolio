@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="YS Multimedia & Designs video library." />
+    <title>Video Library | YS Multimedia & Designs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="video-library.css" />
+  </head>
+  <body>
+    <header class="library-navbar">
+      <a href="../index.html" class="back-button"
+        ><i class="fa-solid fa-arrow-left"></i> Back to Website</a
+      >
+      <a href="../index.html"
+        ><img
+          src="../assets/logo.png"
+          alt="YS Multimedia & Designs"
+          class="library-logo"
+      /></a>
+    </header>
+
+    <main>
+      <section class="library-hero">
+        <span class="library-eyebrow">YS MULTIMEDIA & DESIGNS</span>
+        <h1 id="library-title">Video Library</h1>
+        <p id="library-description">Explore our work.</p>
+        <div class="heading-line"></div>
+      </section>
+
+      <section class="library-section">
+        <div id="video-library" class="library-grid"></div>
+        <div id="empty-library" class="empty-library">
+          <i class="fa-solid fa-film"></i>
+          <h2>No Videos Yet</h2>
+          <p>Videos for this category will be added here soon.</p>
+          <a href="../index.html#about" class="back-home">Back to Categories</a>
+        </div>
+      </section>
+    </main>
+
+    <script src="video-library.js"></script>
+  </body>
+</html>
