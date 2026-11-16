@@ -246,86 +246,104 @@ document.addEventListener("DOMContentLoaded", () => {
 
   descriptionElement.textContent = category.description;
 
-  /* =========================================================
-       CATEGORY HAS NO VIDEOS
-       ========================================================= */
-
-  if (!category.videos || category.videos.length === 0) {
+  const showEmptyState = (heading, message) => {
+    emptyLibrary.querySelector("h2").textContent = heading;
+    emptyLibrary.querySelector("p").textContent = message;
     emptyLibrary.classList.add("show");
+  };
 
+  const renderVideos = (videos) => {
+    library.replaceChildren();
+    if (!videos.length) {
+      showEmptyState("No Videos Yet", "Videos for this category will be added here soon.");
+      return;
+    }
+
+    emptyLibrary.classList.remove("show");
+    videos.forEach((video, index) => {
+      const card = document.createElement("article");
+      card.className = "library-card";
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "library-video-wrapper";
+      const player = document.createElement("video");
+      player.className = "library-video";
+      player.src = video.src;
+      player.controls = true;
+      player.playsInline = true;
+      player.preload = "metadata";
+      player.setAttribute("controlsList", "nodownload");
+      wrapper.append(player);
+
+      const info = document.createElement("div");
+      info.className = "library-card-info";
+      const number = document.createElement("span");
+      number.className = "library-card-number";
+      number.textContent = String(index + 1).padStart(2, "0");
+      const title = document.createElement("h2");
+      title.className = "library-card-title";
+      title.textContent = video.title;
+      const description = document.createElement("p");
+      description.className = "library-card-description";
+      description.textContent = video.description || "";
+      info.append(number, title, description);
+      card.append(wrapper, info);
+      library.append(card);
+    });
+
+    const allVideos = library.querySelectorAll("video");
+    allVideos.forEach((video) => {
+      video.addEventListener("play", () => {
+        allVideos.forEach((otherVideo) => {
+          if (otherVideo !== video && !otherVideo.paused) otherVideo.pause();
+        });
+      });
+    });
+  };
+
+  const client = window.portfolioSupabase;
+  if (!client) {
+    if (category.videos.length) {
+      renderVideos(category.videos);
+    } else {
+      showEmptyState(
+        "Library Not Connected",
+        "The portfolio admin has not been connected to Supabase yet.",
+      );
+    }
     return;
   }
 
-  /* =========================================================
-       VIDEOS EXIST
-       ========================================================= */
-
-  emptyLibrary.classList.remove("show");
-
-  /* =========================================================
-       CREATE VIDEO CARDS
-       ========================================================= */
-
-  category.videos.forEach((video, index) => {
-    const card = document.createElement("article");
-
-    card.className = "library-card";
-
-    const number = String(index + 1).padStart(2, "0");
-
-    card.innerHTML = `
-
-                <div class="library-video-wrapper">
-
-                    <video
-                        class="library-video"
-                        src="${video.src}"
-                        controls
-                        playsinline
-                        preload="metadata"
-                        controlsList="nodownload"
-                    ></video>
-
-                </div>
-
-
-                <div class="library-card-info">
-
-                    <span class="library-card-number">
-                        ${number}
-                    </span>
-
-
-                    <h2 class="library-card-title">
-                        ${video.title}
-                    </h2>
-
-
-                    <p class="library-card-description">
-                        ${video.description || ""}
-                    </p>
-
-                </div>
-
-            `;
-
-    library.appendChild(card);
-  });
-
-  /* =========================================================
-       OPTIONAL:
-       PAUSE OTHER VIDEOS WHEN ONE STARTS
-       ========================================================= */
-
-  const allVideos = library.querySelectorAll("video");
-
-  allVideos.forEach((video) => {
-    video.addEventListener("play", () => {
-      allVideos.forEach((otherVideo) => {
-        if (otherVideo !== video && !otherVideo.paused) {
-          otherVideo.pause();
-        }
-      });
+  showEmptyState("Loading Videos", "Please wait while this category loads.");
+  client
+    .from("portfolio_items")
+    .select("title, description, object_path")
+    .eq("media_type", "video")
+    .eq("category", topic)
+    .eq("is_published", true)
+    .order("created_at", { ascending: false })
+    .then(async ({ data, error }) => {
+      if (error) throw error;
+      const videos = await Promise.all(
+        data.map(async (item) => {
+          const { data: signedFile, error: signedUrlError } = await client.storage
+            .from("portfolio-media")
+            .createSignedUrl(item.object_path, 3600);
+          if (signedUrlError) throw signedUrlError;
+          return {
+            src: signedFile.signedUrl,
+            title: item.title,
+            description: item.description,
+          };
+        }),
+      );
+      renderVideos(videos);
+    })
+    .catch((error) => {
+      console.error("Could not load portfolio videos:", error);
+      showEmptyState(
+        "Unable to Load Videos",
+        "Please try again later. The portfolio administrator may need to check the Supabase setup.",
+      );
     });
-  });
 });

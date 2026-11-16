@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Private YS Multimedia & Designs portfolio administration."
+    />
+    <title>Portfolio Admin | YS Multimedia & Designs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <header class="admin-header">
+      <a href="index.html" class="brand">
+        <img src="assets/logo.png" alt="" />
+        <span>Portfolio Admin</span>
+      </a>
+      <a href="index.html" class="back-link">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> View website
+      </a>
+    </header>
+
+    <main class="admin-main">
+      <section id="login-panel" class="panel login-panel">
+        <span class="eyebrow">PRIVATE DASHBOARD</span>
+        <h1>Sign in</h1>
+        <p>Sign in with the admin account configured for this portfolio.</p>
+        <form id="login-form">
+          <label for="login-email">Email</label>
+          <input id="login-email" name="email" type="email" autocomplete="username" required />
+          <label for="login-password">Password</label>
+          <input
+            id="login-password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+          <button class="button button-primary" type="submit">Sign in</button>
+        </form>
+        <p id="login-status" class="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section id="dashboard" hidden>
+        <div class="dashboard-heading">
+          <div>
+            <span class="eyebrow">MANAGE YOUR WORK</span>
+            <h1>Portfolio library</h1>
+            <p>Upload an item, choose its category, then publish it when ready.</p>
+          </div>
+          <button id="sign-out" class="button button-secondary" type="button">
+            Sign out
+          </button>
+        </div>
+
+        <p id="dashboard-status" class="status" role="status" aria-live="polite"></p>
+
+        <section class="panel upload-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">ADD OR EDIT</span>
+              <h2 id="form-heading">Upload work</h2>
+            </div>
+          </div>
+          <form id="portfolio-form">
+            <div class="form-grid">
+              <div>
+                <label for="media-type">Media type</label>
+                <select id="media-type" name="mediaType" required>
+                  <option value="video">Video</option>
+                  <option value="image">Image / design</option>
+                </select>
+              </div>
+              <div>
+                <label for="category">Category</label>
+                <select id="category" name="category" required></select>
+              </div>
+              <div class="form-wide">
+                <label for="title">Title</label>
+                <input id="title" name="title" maxlength="120" required />
+              </div>
+              <div class="form-wide">
+                <label for="description">Description <span>(optional)</span></label>
+                <textarea id="description" name="description" rows="3" maxlength="1000"></textarea>
+              </div>
+              <div id="file-field" class="form-wide">
+                <label for="media-file">Photo or video (max 50 MiB)</label>
+                <input
+                  id="media-file"
+                  name="mediaFile"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
+                  required
+                />
+              </div>
+              <label class="publish-option form-wide">
+                <input id="is-published" type="checkbox" />
+                <span>Publish immediately (otherwise save as a private draft)</span>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button id="save-item" class="button button-primary" type="submit">
+                Upload item
+              </button>
+              <button id="cancel-edit" class="button button-secondary" type="button" hidden>
+                Cancel edit
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section class="items-section">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">YOUR CONTENT</span>
+              <h2>Uploaded items</h2>
+            </div>
+          </div>
+          <div id="items-list" class="items-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="portfolio-config.js"></script>
+    <script src="admin.js"></script>
+  </body>
+</html>

@@ -216,6 +216,7 @@ a {
 }
 
 .empty-design-library {
+  display: none;
   width: min(1400px, 90%);
   margin: 0 auto 120px;
   padding: 80px 20px;
