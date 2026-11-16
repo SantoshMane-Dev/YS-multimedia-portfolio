@@ -67,97 +67,114 @@ document.addEventListener("DOMContentLoaded", () => {
   titleElement.textContent = category.title;
   descriptionElement.textContent = category.description;
 
-  if (!category.designs || category.designs.length === 0) {
+  const showEmptyState = (heading, message) => {
+    emptyLibrary.querySelector("h2").textContent = heading;
+    emptyLibrary.querySelector("p").textContent = message;
     emptyLibrary.classList.add("show");
+  };
+
+  const imageModal = document.getElementById("image-modal");
+  const modalImage = document.getElementById("modal-image");
+  const closeButton = document.getElementById("modal-close");
+  const closeLightbox = () => {
+    imageModal.classList.remove("open");
+    modalImage.removeAttribute("src");
+    modalImage.alt = "";
+  };
+
+  closeButton?.addEventListener("click", closeLightbox);
+  imageModal?.addEventListener("click", (event) => {
+    if (event.target === imageModal) closeLightbox();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeLightbox();
+  });
+
+  const renderDesigns = (designs) => {
+    designLibrary.replaceChildren();
+    if (!designs.length) {
+      showEmptyState("No Designs Yet", "Designs for this category will be added here soon.");
+      return;
+    }
+
+    emptyLibrary.classList.remove("show");
+    designs.forEach((design, index) => {
+      const card = document.createElement("article");
+      card.className = "portfolio-card";
+      const wrapper = document.createElement("div");
+      wrapper.className = "portfolio-image-wrapper";
+      const image = document.createElement("img");
+      image.src = design.src;
+      image.alt = design.title;
+      image.loading = "lazy";
+      image.decoding = "async";
+      image.addEventListener("click", () => {
+        modalImage.src = image.src;
+        modalImage.alt = image.alt;
+        imageModal.classList.add("open");
+      });
+      wrapper.append(image);
+
+      const info = document.createElement("div");
+      info.className = "portfolio-card-info";
+      const number = document.createElement("span");
+      number.className = "portfolio-card-number";
+      number.textContent = String(index + 1).padStart(2, "0");
+      const title = document.createElement("h2");
+      title.className = "portfolio-card-title";
+      title.textContent = design.title;
+      const description = document.createElement("p");
+      description.className = "portfolio-card-description";
+      description.textContent = design.description || "";
+      info.append(number, title, description);
+      card.append(wrapper, info);
+      designLibrary.append(card);
+    });
+  };
+
+  const client = window.portfolioSupabase;
+  if (!client) {
+    if (category.designs.length) {
+      renderDesigns(category.designs);
+    } else {
+      showEmptyState(
+        "Library Not Connected",
+        "The portfolio admin has not been connected to Supabase yet.",
+      );
+    }
     return;
   }
 
-  emptyLibrary.classList.remove("show");
-
-  category.designs.forEach((design, index) => {
-    const card = document.createElement("article");
-    card.className = "portfolio-card";
-
-    const number = String(index + 1).padStart(2, "0");
-
-    card.innerHTML = `
-      <div class="portfolio-image-wrapper">
-        <img
-          src="${design.src}"
-          alt="${design.title}"
-          loading="lazy"
-          decoding="async"
-        />
-      </div>
-
-      <div class="portfolio-card-info">
-        <span class="portfolio-card-number">${number}</span>
-
-        <h2 class="portfolio-card-title">
-          ${design.title}
-        </h2>
-
-        <p class="portfolio-card-description">
-          ${design.description || ""}
-        </p>
-      </div>
-    `;
-
-    designLibrary.appendChild(card);
-  });
-
-  const images = designLibrary.querySelectorAll(".portfolio-image-wrapper img");
-
-  images.forEach((image) => {
-    image.addEventListener("click", () => {
-      openLightbox(image.src, image.alt);
+  showEmptyState("Loading Designs", "Please wait while this category loads.");
+  client
+    .from("portfolio_items")
+    .select("title, description, object_path")
+    .eq("media_type", "image")
+    .eq("category", topic)
+    .eq("is_published", true)
+    .order("created_at", { ascending: false })
+    .then(async ({ data, error }) => {
+      if (error) throw error;
+      const designs = await Promise.all(
+        data.map(async (item) => {
+          const { data: signedFile, error: signedUrlError } = await client.storage
+            .from("portfolio-media")
+            .createSignedUrl(item.object_path, 3600);
+          if (signedUrlError) throw signedUrlError;
+          return {
+            src: signedFile.signedUrl,
+            title: item.title,
+            description: item.description,
+          };
+        }),
+      );
+      renderDesigns(designs);
+    })
+    .catch((error) => {
+      console.error("Could not load portfolio designs:", error);
+      showEmptyState(
+        "Unable to Load Designs",
+        "Please try again later. The portfolio administrator may need to check the Supabase setup.",
+      );
     });
-  });
-
-  function openLightbox(imageSrc, imageAlt) {
-    const overlay = document.createElement("div");
-
-    overlay.className = "image-modal open";
-
-    overlay.innerHTML = `
-      <button
-        class="modal-close"
-        type="button"
-        aria-label="Close image"
-      >
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-
-      <img src="${imageSrc}" alt="${imageAlt}" />
-    `;
-
-    document.body.appendChild(overlay);
-
-    const closeButton = overlay.querySelector(".modal-close");
-
-    const closeLightbox = () => {
-      overlay.classList.remove("open");
-
-      setTimeout(() => {
-        overlay.remove();
-      }, 200);
-    };
-
-    closeButton.addEventListener("click", closeLightbox);
-
-    overlay.addEventListener("click", (event) => {
-      if (event.target === overlay) {
-        closeLightbox();
-      }
-    });
-
-    const escapeHandler = (event) => {
-      if (event.key === "Escape") {
-        closeLightbox();
-        document.removeEventListener("keydown", escapeHandler);
-      }
-    };
-
-    document.addEventListener("keydown", escapeHandler);
-  }
 });
